@@ -13,8 +13,10 @@ def main():
     maze = mz.Maze("data/final_maze.csv")
     next_nd = maze.getStartPoint()#node[0]--->node number 1
     car_dir = Direction.SOUTH
-    point = score.Scoreboard("data/UID_score.csv")
+    # point = score.Scoreboard("data/UID_score.csv")
     interface = student.interface()         #the part of calling student.py was commented out.
+    RFID = initial(profile)
+    UID_to_Node = {}
 
     p = int(input("Game:"))
 
@@ -73,10 +75,19 @@ def main():
     
     elif(p == 2) :# get a command '2'
 
+        nd = 0
+
         while (1):
 
             #TODO: Implement your algorithm here and return the UID for evaluation function
-            nd = int(input("Destination: "))
+            quit = False
+            maximum = 0
+            for UID in RFID:
+                if int(RFID[UID]) > maximum:
+                    maximum = int(RFID[UID])
+                    nd = UID_to_Node[UID]
+            
+            # nd = int(input("Destination: "))
             
             dirlist = []
             roadlist = []
@@ -94,7 +105,7 @@ def main():
                 car_dir = maze.nd_dict[ndList[i]-1].getDirection(maze.nd_dict[ndList[i+1]-1])
                 roadlist.append(car_dir)
             next_nd = ndList[-1]
-            maze.explored.add(next_nd)
+            # maze.explored.add(next_nd)
             
             dirlist.append(5)
             print ("roadlist:"),roadlist
@@ -102,26 +113,65 @@ def main():
           
             steps = 0
 
-            while (1):
+            while (!quit):
                 if steps < len(dirlist):
                     get_UID = interface.wait_for_node();
-                    if get_UID == 'g':
-                        interface.send_action(dirlist[steps])
-                        print ("next action:"),dirlist[steps]
-                        steps += 1
-                    elif len(get_UID) > 1:
-                        print ("UID ="),get_UID
-                        point.add_UID(get_UID)
-                        a = point.getCurrentScore()
-                        print("The total score: ", a)
-                        interface.send_action(dirlist[steps])
-                        print ("next action:"),dirlist[steps]
-                        steps += 1 
+                    
+                    RFID = check_table()
+                    maximum_ = 0
+                    nd_ = 0
+                    for UID in RFID:
+                        if int(RFID[UID]) > maximum_:
+                            maximum_ = int(RFID[UID])
+                            nd_ = UID_to_Node[UID]
+                    
+                    ######################
+                    #judge for ultrasound#
+                    ######################
+
+                    if 會撞到:
+                        next_nd = ndList[steps]
+                        迴轉()
+                        quit = True
+
+                    elif nd_ == next_nd:
+                        if get_UID == 'g':
+                            interface.send_action(dirlist[steps])
+                            print ("next action:"),dirlist[steps]
+                            steps += 1
+                        elif len(get_UID) > 1:
+                            print ("UID ="),get_UID
+                            RFID = send_request(getpoint)
+                            # point.add_UID(get_UID)
+                            # a = point.getCurrentScore()
+                            # print("The total score: ", a)
+                            interface.send_action(dirlist[steps])
+                            print ("next action:"),dirlist[steps]
+                            steps += 1
+                    else:
+                        if(Judge()):
+                            next_nd = ndList[steps]
+                            quit = True
+                        else:
+                            if get_UID == 'g':
+                                interface.send_action(dirlist[steps])
+                                print ("next action:"),dirlist[steps]
+                                steps += 1
+                            elif len(get_UID) > 1:
+                                print ("UID ="),get_UID
+                                RFID = send_request(getpoint)
+                                # point.add_UID(get_UID)
+                                # a = point.getCurrentScore()
+                                # print("The total score: ", a)
+                                interface.send_action(dirlist[steps])
+                                print ("next action:"),dirlist[steps]
+                                steps += 1
+
                 elif steps >= len(dirlist):
-                    print "Ok"
+                    print ("Ok")
                     break
     else:
-        print "Error"
+        print ("Error")
     print("complete")
     print("")
     interface.end_process()

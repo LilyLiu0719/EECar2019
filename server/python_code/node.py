@@ -16,8 +16,9 @@ def reverse(dir):
     return 0
 
 class Node:
-    def __init__(self, index=0):
+    def __init__(self, index = 0,UID = 0):
         self.index = index
+        self.UID = UID
         self.Successors = [] #component are lists, whose component are [index,direction,length]
 
     def getIndex(self):
